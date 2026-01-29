@@ -173,16 +173,16 @@ resource "aws_security_group_rule" "this" {
 ## GitHub Actions OIDC (module)
 ####################################################################
 
-module "github_actions" {
-  source = "../../modules/github-actions"
+# module "github_actions" {
+#   source = "../../modules/github-actions"
 
-  name_prefix                 = local.name_prefix
-  project                     = var.project
-  environment                 = var.environment
-  openid_connect_url          = var.openid_connect_url
-  client_id_list              = var.client_id_list
-  github_actions_subjects     = var.github_actions_subjects
-  role_name                   = var.github_actions_role_name
+#   name_prefix                 = local.name_prefix
+#   project                     = var.project
+#   environment                 = var.environment
+#   openid_connect_url          = var.openid_connect_url
+#   client_id_list              = var.client_id_list
+#   github_actions_subjects     = var.github_actions_subjects
+#   role_name                   = var.github_actions_role_name
 
-  tags = local.tags
-}
+#   tags = local.tags
+# }

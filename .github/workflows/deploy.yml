@@ -1,0 +1,144 @@
+name: Dev Infra
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "Terraform action"
+        type: choice
+        options:
+          - apply
+          - destroy
+        default: apply
+        required: true
+      confirm_destroy:
+        description: "Type DESTROY to confirm"
+        required: true
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: terraform-dev-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  TF_INPUT: "false"
+  TF_IN_AUTOMATION: "true"
+  GHA_OIDC_ROLE_NAME: ${{ vars.GHA_OIDC_ROLE_NAME }}
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: terraform/infrastructure/dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.6.6"
+          terraform_wrapper: false
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ format('arn:aws:iam::{0}:role/{1}', secrets.AWS_ACCOUNT_ID, env.GHA_OIDC_ROLE_NAME) }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Terraform init
+        run: terraform init -input=false -backend-config=backend.tfvars
+
+      - name: Terraform fmt
+        run: terraform fmt -check -diff -recursive
+
+      - name: Terraform validate
+        run: terraform validate -no-color
+
+      - name: Terraform plan
+        run: |
+          if [ "${{ inputs.action }}" = "destroy" ]; then
+            terraform plan -destroy -no-color -out=tfplan
+          else
+            terraform plan -no-color -out=tfplan
+          fi
+
+      - name: Upload plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan
+          path: terraform/infrastructure/dev/tfplan
+          if-no-files-found: error
+
+  apply:
+    if: ${{ inputs.action == 'apply' }}
+    needs: plan
+    runs-on: ubuntu-latest
+    environment: approvers
+    defaults:
+      run:
+        working-directory: terraform/infrastructure/dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.6.6"
+          terraform_wrapper: false
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ format('arn:aws:iam::{0}:role/{1}', secrets.AWS_ACCOUNT_ID, env.GHA_OIDC_ROLE_NAME) }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Terraform init
+        run: terraform init -input=false -backend-config=backend.tfvars
+
+      - name: Download plan
+        uses: actions/download-artifact@v4
+        with:
+          name: tfplan
+          path: terraform/infrastructure/dev
+
+      - name: Terraform apply
+        run: terraform apply -auto-approve -no-color tfplan
+
+  destroy:
+    if: ${{ inputs.action == 'destroy' }}
+    needs: plan
+    runs-on: ubuntu-latest
+    environment: approvers
+    defaults:
+      run:
+        working-directory: terraform/infrastructure/dev
+    steps:
+      - name: Confirm destroy
+        if: ${{ inputs.confirm_destroy != 'DESTROY' }}
+        run: |
+          echo "Set confirm_destroy to DESTROY to proceed."
+          exit 1
+
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.6.6"
+          terraform_wrapper: false
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ format('arn:aws:iam::{0}:role/{1}', secrets.AWS_ACCOUNT_ID, env.GHA_OIDC_ROLE_NAME) }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Terraform init
+        run: terraform init -input=false -backend-config=backend.tfvars
+
+      - name: Download plan
+        uses: actions/download-artifact@v4
+        with:
+          name: tfplan
+          path: terraform/infrastructure/dev
+
+      - name: Terraform destroy
+        run: terraform apply -auto-approve -no-color tfplan

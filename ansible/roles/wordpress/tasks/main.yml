@@ -1,0 +1,45 @@
+- name: Ensure app directory exists
+  ansible.builtin.file:
+    path: "{{ wordpress_app_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Fetch DB secret
+  ansible.builtin.command: >
+    aws secretsmanager get-secret-value --secret-id {{ db_secret_arn }} --query SecretString --output text --region {{ aws_region }}
+  register: db_secret_raw
+  changed_when: false
+
+- name: Parse DB secret
+  ansible.builtin.set_fact:
+    db_secret: "{{ db_secret_raw.stdout | from_json }}"
+  no_log: true
+
+- name: Log in to ECR (WordPress image)
+  ansible.builtin.shell: |
+    aws ecr get-login-password --region {{ aws_region }} | docker login --username AWS --password-stdin {{ wordpress_ecr_registry }}
+  args:
+    executable: /bin/bash
+
+- name: Render Nginx config
+  ansible.builtin.template:
+    src: nginx.conf.j2
+    dest: "{{ wordpress_app_dir }}/nginx.conf"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Render docker-compose.yml
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ wordpress_app_dir }}/docker-compose.yml"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Pull images and start WordPress
+  ansible.builtin.command: docker compose up -d
+  args:
+    chdir: "{{ wordpress_app_dir }}"

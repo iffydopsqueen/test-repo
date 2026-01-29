@@ -1,0 +1,25 @@
+- name: Deploy WordPress (Docker)
+  hosts: role_app
+  become: true
+  vars:
+    wordpress_app_dir: /opt/wordpress
+    wordpress_image: "{{ lookup('env', 'WORDPRESS_IMAGE') }}"
+    wordpress_nginx_image: "{{ lookup('env', 'WORDPRESS_NGINX_IMAGE') | default('nginx:1.25-alpine') }}"
+    wordpress_host_port: "{{ lookup('env', 'WORDPRESS_HOST_PORT') | default('80') }}"
+    wordpress_ecr_registry: "{{ lookup('env', 'WORDPRESS_ECR_REGISTRY') }}"
+    db_host: "{{ lookup('env', 'DB_HOST') }}"
+    db_name: "{{ lookup('env', 'DB_NAME') | default('wordpress') }}"
+    db_secret_arn: "{{ lookup('env', 'DB_SECRET_ARN') }}"
+  pre_tasks:
+    - name: Validate required variables
+      ansible.builtin.assert:
+        that:
+          - wordpress_image | length > 0
+          - wordpress_ecr_registry | length > 0
+          - db_host | length > 0
+          - db_secret_arn | length > 0
+        fail_msg: "Set WORDPRESS_IMAGE, WORDPRESS_ECR_REGISTRY, DB_HOST, DB_SECRET_ARN before running."
+  roles:
+    - common
+    - docker
+    - wordpress

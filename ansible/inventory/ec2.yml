@@ -1,0 +1,15 @@
+plugin: amazon.aws.aws_ec2
+regions:
+  - "{{ lookup('env', 'AWS_REGION') | default('us-east-1') }}"
+filters:
+  tag:Project: "{{ lookup('env', 'PROJECT') | default('wordpress') }}"
+  tag:Environment: "{{ lookup('env', 'ENVIRONMENT') | default('dev') }}"
+  tag:Role: app
+hostnames:
+  - instance-id
+compose:
+  ansible_host: instance_id
+keyed_groups:
+  - key: tags.Role
+    prefix: role
+strict: False

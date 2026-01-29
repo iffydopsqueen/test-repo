@@ -1,0 +1,108 @@
+name: Infra and Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      aws_region:
+        description: "AWS region"
+        required: true
+      environment:
+        description: "Environment directory (dev/stg/prd)"
+        required: true
+        type: choice
+        options:
+          - dev
+          - stg
+          - prd
+        default: dev
+      project:
+        description: "Project name for tags"
+        required: true
+        default: "wordpress"
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  TF_INPUT: "false"
+  TF_IN_AUTOMATION: "true"
+  # TF_VAR_attach_ecr_readonly: "true"
+  GHA_OIDC_ROLE_NAME: ${{ vars.GHA_OIDC_ROLE_NAME }}
+  TF_DIR: "terraform/infrastructure/${{ inputs.environment }}"
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: approvers
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ format('arn:aws:iam::{0}:role/{1}', secrets.AWS_ACCOUNT_ID, env.GHA_OIDC_ROLE_NAME) }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Set environment directory
+        run: |
+          echo "${{ env.TF_DIR }}" >> $GITHUB_ENV
+          echo "PROJECT=${{ inputs.project }}" >> $GITHUB_ENV
+          echo "ENVIRONMENT=${{ inputs.environment }}" >> $GITHUB_ENV
+
+      - name: Terraform init
+        run: terraform -chdir=${{ env.TF_DIR }} init -backend-config=backend.hcl
+
+      - name: Terraform apply
+        run: terraform -chdir=${{ env.TF_DIR }} apply -auto-approve
+
+      - name: Capture Terraform outputs
+        id: tfout
+        run: |
+          terraform -chdir=${{ env.TF_DIR }} output -json > /tmp/tf-outputs.json
+          echo "TF_OUTPUTS=/tmp/tf-outputs.json" >> $GITHUB_ENV
+
+          WORDPRESS_REPO=$(jq -r '.ecr_repo_urls.value.wordpress' /tmp/tf-outputs.json)
+          echo "WORDPRESS_REPO=$WORDPRESS_REPO" >> $GITHUB_ENV
+
+          DB_HOST=$(jq -r '.rds_endpoint.value' /tmp/tf-outputs.json)
+          DB_SECRET_ARN=$(jq -r '.secrets_manager_arn.value' /tmp/tf-outputs.json)
+          SSM_BUCKET=$(jq -r '.ansible_ssm_bucket_name.value' /tmp/tf-outputs.json)
+          echo "DB_HOST=$DB_HOST" >> $GITHUB_ENV
+          echo "DB_SECRET_ARN=$DB_SECRET_ARN" >> $GITHUB_ENV
+          echo "ANSIBLE_SSM_BUCKET=$SSM_BUCKET" >> $GITHUB_ENV
+
+      - name: Login to ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push WordPress image
+        run: |
+          IMAGE_TAG=${GITHUB_SHA}
+          docker build -t ${WORDPRESS_REPO}:${IMAGE_TAG} -f app/Dockerfile app
+          docker push ${WORDPRESS_REPO}:${IMAGE_TAG}
+          echo "WORDPRESS_IMAGE=${WORDPRESS_REPO}:${IMAGE_TAG}" >> $GITHUB_ENV
+          echo "WORDPRESS_ECR_REGISTRY=$(echo ${WORDPRESS_REPO} | cut -d/ -f1)" >> $GITHUB_ENV
+
+      - name: Install Ansible
+        run: |
+          python3 -m pip install --upgrade pip
+          pip3 install ansible boto3 botocore
+          ansible-galaxy collection install amazon.aws
+
+      - name: Run Ansible (WordPress)
+        env:
+          AWS_REGION: ${{ inputs.aws_region }}
+          PROJECT: ${{ env.PROJECT }}
+          ENVIRONMENT: ${{ env.ENVIRONMENT }}
+          WORDPRESS_IMAGE: ${{ env.WORDPRESS_IMAGE }}
+          WORDPRESS_ECR_REGISTRY: ${{ env.WORDPRESS_ECR_REGISTRY }}
+          DB_HOST: ${{ env.DB_HOST }}
+          DB_NAME: wordpress
+          DB_SECRET_ARN: ${{ env.DB_SECRET_ARN }}
+          ANSIBLE_SSM_BUCKET: ${{ env.ANSIBLE_SSM_BUCKET }}
+        run: ansible-playbook ansible/wordpress.yml

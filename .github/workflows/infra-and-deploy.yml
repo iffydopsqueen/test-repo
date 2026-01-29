@@ -48,7 +48,7 @@ jobs:
 
       - name: Set environment directory
         run: |
-          echo "${{ env.TF_DIR }}" >> $GITHUB_ENV
+          echo "TF_DIR=${{ env.TF_DIR }}" >> $GITHUB_ENV
           echo "PROJECT=${{ inputs.project }}" >> $GITHUB_ENV
           echo "ENVIRONMENT=${{ inputs.environment }}" >> $GITHUB_ENV
 

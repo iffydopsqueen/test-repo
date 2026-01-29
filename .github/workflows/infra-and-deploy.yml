@@ -3,9 +3,6 @@ name: Infra and Deploy
 on:
   workflow_dispatch:
     inputs:
-      aws_region:
-        description: "AWS region"
-        required: true
       environment:
         description: "Environment directory (dev/stg/prd)"
         required: true
@@ -96,7 +93,7 @@ jobs:
 
       - name: Run Ansible (WordPress)
         env:
-          AWS_REGION: ${{ inputs.aws_region }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
           PROJECT: ${{ env.PROJECT }}
           ENVIRONMENT: ${{ env.ENVIRONMENT }}
           WORDPRESS_IMAGE: ${{ env.WORDPRESS_IMAGE }}

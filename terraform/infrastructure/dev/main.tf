@@ -101,11 +101,11 @@ module "ec2" {
 module "ansible" {
   source = "../../modules/ansible"
 
-  name          = local.name_prefix
-  vpc_id        = module.vpc.vpc_id
-  subnet_id     = module.vpc.private_app_subnet_ids[0]
-  ami_id        = var.ansible_ami_id
-  instance_type = var.ansible_instance_type
+  name                     = local.name_prefix
+  vpc_id                   = module.vpc.vpc_id
+  subnet_id                = module.vpc.private_app_subnet_ids[0]
+  ami_id                   = var.ansible_ami_id
+  instance_type            = var.ansible_instance_type
   ssm_bucket_force_destroy = var.ansible_ssm_bucket_force_destroy
 
   tags = local.tags

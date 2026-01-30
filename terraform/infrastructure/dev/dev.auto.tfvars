@@ -1,13 +1,13 @@
-region                   = "us-east-1"
-project                  = "wordpress"
-environment              = "dev"
-vpc_cidr                 = "10.0.0.0/16"
-public_subnet_cidrs      = ["10.0.1.0/24", "10.0.2.0/24"]
-private_app_subnet_cidrs = ["10.0.11.0/24", "10.0.12.0/24"]
-private_db_subnet_cidrs  = ["10.0.21.0/24", "10.0.22.0/24"]
-enable_nat_gateway       = true
-enable_ssm_endpoints     = true
-enable_ansible_bootstrap = true
+region                           = "us-east-1"
+project                          = "wordpress"
+environment                      = "dev"
+vpc_cidr                         = "10.0.0.0/16"
+public_subnet_cidrs              = ["10.0.1.0/24", "10.0.2.0/24"]
+private_app_subnet_cidrs         = ["10.0.11.0/24", "10.0.12.0/24"]
+private_db_subnet_cidrs          = ["10.0.21.0/24", "10.0.22.0/24"]
+enable_nat_gateway               = true
+enable_ssm_endpoints             = true
+enable_ansible_bootstrap         = true
 ansible_ssm_bucket_force_destroy = true
 
 db_name                 = "wordpress"
@@ -31,8 +31,8 @@ ansible_ami_id = "ami-0b6c6ebed2801a5cb"
 
 # Allow app instances to pull from ECR.
 attach_ecr_readonly = true
-ecr_repositories = ["wordpress"]
-ecr_force_delete = true
+ecr_repositories    = ["wordpress"]
+ecr_force_delete    = true
 
 tags = {
   Owner = "devops"

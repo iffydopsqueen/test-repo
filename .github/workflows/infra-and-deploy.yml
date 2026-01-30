@@ -52,6 +52,7 @@ jobs:
           echo "TF_DIR=${{ env.TF_DIR }}" >> $GITHUB_ENV
           echo "PROJECT=${{ inputs.project }}" >> $GITHUB_ENV
           echo "ENVIRONMENT=${{ inputs.environment }}" >> $GITHUB_ENV
+          echo "SSM_DOCUMENT_NAME=${{ inputs.project }}-${{ inputs.environment }}-ansible-run" >> $GITHUB_ENV
 
       - name: Terraform init
         run: terraform -chdir=${{ env.TF_DIR }} init -backend-config=backend.hcl
@@ -104,7 +105,7 @@ jobs:
           ANSIBLE_SSM_BUCKET: ${{ env.ANSIBLE_SSM_BUCKET }}
         run: |
           COMMAND_ID=$(aws ssm send-command \
-            --document-name "AWS-RunShellScript" \
+            --document-name "${SSM_DOCUMENT_NAME}" \
             --targets "Key=tag:Project,Values=${PROJECT}" "Key=tag:Environment,Values=${ENVIRONMENT}" "Key=tag:Role,Values=ansible-control" \
             --parameters commands="[
               \"set -eux\",

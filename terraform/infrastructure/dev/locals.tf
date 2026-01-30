@@ -12,7 +12,7 @@ locals {
     "if ! command -v aws >/dev/null 2>&1; then curl -sSLo /tmp/awscliv2.zip https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip && unzip -q /tmp/awscliv2.zip -d /tmp && sudo /tmp/aws/install; fi",
     "sudo python3 -m venv /opt/ansible-venv",
     "sudo /opt/ansible-venv/bin/pip install --upgrade pip",
-    "sudo /opt/ansible-venv/bin/pip install ansible boto3 botocore amazon.aws",
+    "sudo /opt/ansible-venv/bin/pip install ansible boto3 botocore",
     "sudo ln -sf /opt/ansible-venv/bin/ansible-playbook /usr/local/bin/ansible-playbook",
     "sudo ln -sf /opt/ansible-venv/bin/ansible-galaxy /usr/local/bin/ansible-galaxy",
     "sudo ln -sf /opt/ansible-venv/bin/ansible-inventory /usr/local/bin/ansible-inventory",

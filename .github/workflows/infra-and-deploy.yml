@@ -114,7 +114,7 @@ jobs:
               \"aws s3 cp s3://${ANSIBLE_SSM_BUCKET}/playbooks/${GITHUB_SHA}/ansible.tgz /tmp/ansible-run-${GITHUB_SHA}/ansible.tgz\",
               \"tar -xzf /tmp/ansible-run-${GITHUB_SHA}/ansible.tgz -C /tmp/ansible-run-${GITHUB_SHA}\",
               \"cd /tmp/ansible-run-${GITHUB_SHA}\",
-              \"export AWS_REGION=${AWS_REGION} PROJECT=${PROJECT} ENVIRONMENT=${ENVIRONMENT} WORDPRESS_IMAGE=${WORDPRESS_IMAGE} WORDPRESS_ECR_REGISTRY=${WORDPRESS_ECR_REGISTRY} DB_HOST=${DB_HOST} DB_NAME=${DB_NAME} DB_SECRET_ARN=${DB_SECRET_ARN} ANSIBLE_SSM_BUCKET=${ANSIBLE_SSM_BUCKET} ANSIBLE_CONFIG=/tmp/ansible-run-${GITHUB_SHA}/ansible/ansible.cfg ANSIBLE_COLLECTIONS_PATHS=/usr/share/ansible/collections:/root/.ansible/collections; ansible-playbook ansible/wordpress.yml\"
+              \"export AWS_REGION=${AWS_REGION} PROJECT=${PROJECT} ENVIRONMENT=${ENVIRONMENT} WORDPRESS_IMAGE=${WORDPRESS_IMAGE} WORDPRESS_ECR_REGISTRY=${WORDPRESS_ECR_REGISTRY} DB_HOST=${DB_HOST} DB_NAME=${DB_NAME} DB_SECRET_ARN=${DB_SECRET_ARN} ANSIBLE_SSM_BUCKET=${ANSIBLE_SSM_BUCKET} ANSIBLE_CONFIG=/tmp/ansible-run-${GITHUB_SHA}/ansible/ansible.cfg ANSIBLE_COLLECTIONS_PATH=/usr/share/ansible/collections:/root/.ansible/collections; ansible-playbook ansible/wordpress.yml\"
             ]" \
             --comment "Run WordPress deploy via Ansible control node" \
             --query "Command.CommandId" \

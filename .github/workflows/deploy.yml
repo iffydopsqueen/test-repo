@@ -62,9 +62,7 @@ jobs:
       - name: Terraform plan
         run: |
           if [ "${{ inputs.action }}" = "destroy" ]; then
-            terraform plan -destroy -no-color -out=tfplan \
-              -var="ecr_force_delete=true" \
-              -var="ansible_ssm_bucket_force_destroy=true"
+            terraform plan -destroy -no-color -out=tfplan
           else
             terraform plan -no-color -out=tfplan
           fi

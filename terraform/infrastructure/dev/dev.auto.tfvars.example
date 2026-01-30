@@ -7,6 +7,7 @@ private_app_subnet_cidrs = ["10.0.11.0/24", "10.0.12.0/24"]
 private_db_subnet_cidrs  = ["10.0.21.0/24", "10.0.22.0/24"]
 enable_ssm_endpoints     = true
 enable_ansible_bootstrap = true
+ansible_ssm_bucket_force_destroy = true
 
 db_name     = "wordpress"
 db_username = "appuser"
@@ -30,6 +31,7 @@ attach_ecr_readonly = true
 ansible_ami_id = "ami-0123456789abcdef0"
 
 ecr_repositories = ["wordpress"]
+ecr_force_delete = true
 
 tags = {
   Owner = "devops"

@@ -31,7 +31,7 @@ module "vpc" {
 module "secrets" {
   source = "../../modules/asm"
 
-  name     = "${local.name_prefix}-db-credentials-v1"
+  name     = "${local.name_prefix}-db-creds"
   username = var.db_username
   password = random_password.db.result
 
@@ -77,6 +77,7 @@ module "ecr" {
   source = "../../modules/ecr"
 
   repositories = var.ecr_repositories
+  force_delete = var.ecr_force_delete
 
   tags = local.tags
 }
@@ -105,6 +106,7 @@ module "ansible" {
   subnet_id     = module.vpc.private_app_subnet_ids[0]
   ami_id        = var.ansible_ami_id
   instance_type = var.ansible_instance_type
+  ssm_bucket_force_destroy = var.ansible_ssm_bucket_force_destroy
 
   tags = local.tags
 }

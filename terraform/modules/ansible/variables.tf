@@ -24,6 +24,12 @@ variable "instance_type" {
   default     = "t3.micro"
 }
 
+variable "ssm_bucket_force_destroy" {
+  type        = bool
+  description = "Whether to force destroy the Ansible SSM bucket when not empty"
+  default     = false
+}
+
 variable "tags" {
   type        = map(string)
   description = "Tags applied to control node resources"

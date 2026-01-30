@@ -4,6 +4,7 @@ resource "random_id" "ssm_bucket" {
 
 resource "aws_s3_bucket" "ssm" {
   bucket = "${var.name}-ansible-ssm-${random_id.ssm_bucket.hex}"
+  force_destroy = var.ssm_bucket_force_destroy
 
   tags = merge(var.tags, {
     Name = "${var.name}-ansible-ssm"

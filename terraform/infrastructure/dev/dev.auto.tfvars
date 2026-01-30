@@ -8,6 +8,7 @@ private_db_subnet_cidrs  = ["10.0.21.0/24", "10.0.22.0/24"]
 enable_nat_gateway       = true
 enable_ssm_endpoints     = true
 enable_ansible_bootstrap = true
+ansible_ssm_bucket_force_destroy = true
 
 db_name                 = "wordpress"
 db_username             = "appuser"
@@ -31,6 +32,7 @@ ansible_ami_id = "ami-0b6c6ebed2801a5cb"
 # Allow app instances to pull from ECR.
 attach_ecr_readonly = true
 ecr_repositories = ["wordpress"]
+ecr_force_delete = true
 
 tags = {
   Owner = "devops"

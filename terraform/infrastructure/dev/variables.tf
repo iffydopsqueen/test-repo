@@ -139,6 +139,12 @@ variable "ecr_repositories" {
   default     = []
 }
 
+variable "ecr_force_delete" {
+  type        = bool
+  description = "Force delete ECR repositories even if they contain images"
+  default     = false
+}
+
 variable "ec2_ami_id" {
   type        = string
   description = "AMI ID for the app instance"
@@ -171,6 +177,12 @@ variable "enable_ansible_bootstrap" {
   type        = bool
   description = "Whether to bootstrap the Ansible control node via SSM"
   default     = true
+}
+
+variable "ansible_ssm_bucket_force_destroy" {
+  type        = bool
+  description = "Force destroy the Ansible SSM bucket even if it contains objects"
+  default     = false
 }
 
 variable "attach_ecr_readonly" {

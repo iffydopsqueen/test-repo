@@ -1,15 +1,18 @@
-# # Fetch the TLS certificate chain for GitHub Actions OIDC
-# data "tls_certificate" "github_actions" {
-#   url = var.openid_connect_url
+# locals {
+#   ssm_document_name = var.ssm_document_name != "" ? var.ssm_document_name : "${var.name_prefix}-ansible-run"
 # }
 
-# # Create the IAM OIDC provider for GitHub Actions
+# # Fetch the TLS certificate chain for GitHub Actions OIDC
 # resource "aws_iam_openid_connect_provider" "this" {
 #   url             = var.openid_connect_url
 #   client_id_list  = var.client_id_list
 #   thumbprint_list = [data.tls_certificate.github_actions.certificates[0].sha1_fingerprint]
 
 #   tags = var.tags
+# }
+
+# data "tls_certificate" "github_actions" {
+#   url = var.openid_connect_url
 # }
 
 # # IAM Role Policy for GitHub Actions to assume via OIDC
@@ -41,6 +44,33 @@
 #   name               = var.role_name
 #   description        = "GitHub Actions OIDC role for CI/CD pipeline"
 #   assume_role_policy = data.aws_iam_policy_document.assume_role.json
+
+#   tags = var.tags
+# }
+
+# resource "aws_ssm_document" "ansible_run" {
+#   name          = local.ssm_document_name
+#   document_type = "Command"
+
+#   content = jsonencode({
+#     schemaVersion = "2.2"
+#     description   = "Run Ansible playbooks on the control node"
+#     parameters = {
+#       commands = {
+#         type        = "StringList"
+#         description = "Shell commands to run"
+#       }
+#     }
+#     mainSteps = [
+#       {
+#         action = "aws:runShellScript"
+#         name   = "runShell"
+#         inputs = {
+#           runCommand = "{{ commands }}"
+#         }
+#       }
+#     ]
+#   })
 
 #   tags = var.tags
 # }
@@ -83,6 +113,35 @@
 #     effect  = "Allow"
 #     actions = ["s3:*"]
 #     resources = ["*"]
+#   }
+
+#   statement {
+#     sid     = "SsmSendCommandDocument"
+#     effect  = "Allow"
+#     actions = ["ssm:SendCommand"]
+#     resources = [aws_ssm_document.ansible_run.arn]
+#   }
+
+#   statement {
+#     sid     = "SsmSendCommandTaggedInstances"
+#     effect  = "Allow"
+#     actions = ["ssm:SendCommand"]
+#     resources = [
+#       "arn:aws:ec2:*:*:instance/*",
+#       "arn:aws:ssm:*:*:managed-instance/*"
+#     ]
+
+#     condition {
+#       test     = "StringEquals"
+#       variable = "aws:ResourceTag/Project"
+#       values   = [var.project]
+#     }
+
+#     condition {
+#       test     = "StringEquals"
+#       variable = "aws:ResourceTag/Environment"
+#       values   = [var.environment]
+#     }
 #   }
 
 #   statement {
@@ -190,6 +249,36 @@
 #   }
 
 #   statement {
+#     sid     = "ManageTaggedIamResources"
+#     effect  = "Allow"
+#     actions = [
+#       "iam:DeleteRole",
+#       "iam:DetachRolePolicy",
+#       "iam:DeleteRolePolicy",
+#       "iam:RemoveRoleFromInstanceProfile",
+#       "iam:DeleteInstanceProfile",
+#       "iam:DeletePolicy",
+#       "iam:DeletePolicyVersion",
+#       "iam:UntagRole",
+#       "iam:UntagPolicy",
+#       "iam:UntagInstanceProfile"
+#     ]
+#     resources = ["*"]
+
+#     condition {
+#       test     = "StringEquals"
+#       variable = "aws:ResourceTag/Project"
+#       values   = [var.project]
+#     }
+
+#     condition {
+#       test     = "StringEquals"
+#       variable = "aws:ResourceTag/Environment"
+#       values   = [var.environment]
+#     }
+#   }
+
+#   statement {
 #     sid     = "PassRoleToServices"
 #     effect  = "Allow"
 #     actions = ["iam:PassRole"]
@@ -205,6 +294,55 @@
 #         "elasticloadbalancing.amazonaws.com"
 #       ]
 #     }
+#   }
+
+#   # Bootstrap actions that don't carry request tags at create time.
+#   statement {
+#     sid    = "BootstrapIamSsmEip"
+#     effect = "Allow"
+#     actions = [
+#       "ssm:CreateDocument",
+#       "ssm:UpdateDocument",
+#       "ssm:UpdateDocumentDefaultVersion",
+#       "ssm:DeleteDocument",
+#       "ssm:CreateAssociation",
+#       "ssm:UpdateAssociation",
+#       "ssm:DeleteAssociation",
+#       "iam:CreatePolicy",
+#       "iam:CreatePolicyVersion",
+#       "iam:DeletePolicy",
+#       "iam:DeletePolicyVersion",
+#       "iam:CreateInstanceProfile",
+#       "iam:DeleteInstanceProfile",
+#       "iam:AddRoleToInstanceProfile",
+#       "iam:RemoveRoleFromInstanceProfile",
+#       "iam:AttachRolePolicy",
+#       "iam:DetachRolePolicy",
+#       "iam:PutRolePolicy",
+#       "iam:DeleteRolePolicy",
+#       "iam:PassRole",
+#       "ec2:AllocateAddress",
+#       "ec2:ReleaseAddress",
+#       "ec2:AssociateAddress",
+#       "ec2:DisassociateAddress"
+#     ]
+#     resources = ["*"]
+#   }
+
+#   # EC2 instance launch (RunInstances doesn't always include request tags).
+#   statement {
+#     sid    = "Ec2RunInstances"
+#     effect = "Allow"
+#     actions = [
+#       "ec2:RunInstances",
+#       "ec2:CreateTags",
+#       "ec2:CreateVolume",
+#       "ec2:AttachVolume",
+#       "ec2:CreateNetworkInterface",
+#       "ec2:AttachNetworkInterface",
+#       "ec2:DeleteNetworkInterface"
+#     ]
+#     resources = ["*"]
 #   }
 # }
 

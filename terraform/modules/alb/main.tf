@@ -50,6 +50,13 @@ resource "aws_lb_listener" "this" {
   ssl_policy        = var.listener_protocol == "HTTPS" ? var.ssl_policy : null
   certificate_arn   = var.listener_protocol == "HTTPS" ? var.certificate_arn : null
 
+  lifecycle {
+    precondition {
+      condition     = var.listener_protocol != "HTTPS" || var.certificate_arn != null
+      error_message = "certificate_arn is required when listener_protocol is HTTPS."
+    }
+  }
+
   default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.this.arn

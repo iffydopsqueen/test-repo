@@ -31,6 +31,21 @@ resource "aws_vpc" "this" {
   enable_dns_support   = true
   enable_dns_hostnames = true
 
+  lifecycle {
+    precondition {
+      condition     = length(var.public_subnet_cidrs) == length(var.azs)
+      error_message = "public_subnet_cidrs must have the same length as azs."
+    }
+    precondition {
+      condition     = length(var.private_app_subnet_cidrs) == length(var.azs)
+      error_message = "private_app_subnet_cidrs must have the same length as azs."
+    }
+    precondition {
+      condition     = length(var.private_db_subnet_cidrs) == length(var.azs)
+      error_message = "private_db_subnet_cidrs must have the same length as azs."
+    }
+  }
+
   tags = merge(var.tags, {
     Name = var.name
   })

@@ -40,11 +40,6 @@ variable "certificate_arn" {
   type        = string
   description = "ACM certificate ARN for HTTPS listeners"
   default     = null
-
-  validation {
-    condition     = var.listener_protocol != "HTTPS" || var.certificate_arn != null
-    error_message = "certificate_arn is required when listener_protocol is HTTPS"
-  }
 }
 
 variable "ssl_policy" {

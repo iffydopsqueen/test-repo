@@ -8,12 +8,12 @@ locals {
 
   ansible_bootstrap_commands = [
     "sudo apt-get update -y",
-    "sudo apt-get install -y python3 python3-venv python3-pip",
-    "sudo apt-get install -y ansible git unzip jq curl awscli",
-    "sudo pip3 install boto3 botocore",
+    "sudo DEBIAN_FRONTEND=noninteractive apt-get install -y python3 python3-venv python3-pip python3-full git curl unzip jq ansible",
+    "sudo apt-get install -y awscli || true",
     "if ! command -v aws >/dev/null 2>&1; then curl -sSLo /tmp/awscliv2.zip https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip && unzip -q /tmp/awscliv2.zip -d /tmp && sudo /tmp/aws/install; fi",
+    "sudo apt-get install -y python3-boto3 python3-botocore || true",
     "curl -sSLo /tmp/session-manager-plugin.deb https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_64bit/session-manager-plugin.deb",
-    "sudo dpkg -i /tmp/session-manager-plugin.deb",
+    "sudo dpkg -i /tmp/session-manager-plugin.deb || sudo DEBIAN_FRONTEND=noninteractive apt-get -f install -y",
     "ansible-galaxy collection install amazon.aws",
   ]
 

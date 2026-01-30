@@ -81,6 +81,7 @@ resource "aws_eip" "nat" {
   for_each = var.enable_nat_gateway ? local.public_subnet_map : {}
 
   domain = "vpc"
+  depends_on    = [aws_internet_gateway.this] # To avoid IGW hanging during destroy
 
   tags = merge(var.tags, {
     Name = "${var.name}-nat-eip-${each.key}"
@@ -92,7 +93,7 @@ resource "aws_nat_gateway" "this" {
 
   allocation_id = aws_eip.nat[each.key].id
   subnet_id     = aws_subnet.this["${each.key}-public"].id
-  depends_on    = [aws_internet_gateway.this]
+  depends_on    = [aws_internet_gateway.this] # To avoid IGW hanging during destroy
 
   tags = merge(var.tags, {
     Name = "${var.name}-nat-${each.key}"

@@ -71,6 +71,7 @@ module "alb" {
   health_check_path = var.alb_health_check_path
 
   tags = local.tags
+  depends_on = [module.vpc] # To avoid IGW hanging during destroy 
 }
 
 module "ecr" {

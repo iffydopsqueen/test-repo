@@ -92,6 +92,7 @@ resource "aws_nat_gateway" "this" {
 
   allocation_id = aws_eip.nat[each.key].id
   subnet_id     = aws_subnet.this["${each.key}-public"].id
+  depends_on    = [aws_internet_gateway.this]
 
   tags = merge(var.tags, {
     Name = "${var.name}-nat-${each.key}"

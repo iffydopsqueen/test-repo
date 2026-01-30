@@ -110,6 +110,7 @@ jobs:
             --parameters commands="[
               \"set -eux\",
               \"mkdir -p /tmp/ansible-run-${GITHUB_SHA}\",
+              \"command -v aws >/dev/null 2>&1 || (sudo apt-get update -y && sudo apt-get install -y awscli) || (sudo yum install -y awscli)\",
               \"aws s3 cp s3://${ANSIBLE_SSM_BUCKET}/playbooks/${GITHUB_SHA}/ansible.tgz /tmp/ansible-run-${GITHUB_SHA}/ansible.tgz\",
               \"tar -xzf /tmp/ansible-run-${GITHUB_SHA}/ansible.tgz -C /tmp/ansible-run-${GITHUB_SHA}\",
               \"cd /tmp/ansible-run-${GITHUB_SHA}\",

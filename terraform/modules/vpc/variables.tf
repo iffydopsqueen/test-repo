@@ -46,13 +46,13 @@ variable "private_db_subnet_cidrs" {
 variable "enable_nat_gateway" {
   type        = bool
   description = "Whether to create NAT gateways for private app subnet egress"
-  default     = true
+  default     = false
 }
 
 variable "enable_ssm_endpoints" {
   type        = bool
   description = "Whether to create VPC interface endpoints for SSM (ssm, ssmmessages, ec2messages)"
-  default     = true
+  default     = false
 }
 
 variable "tags" {

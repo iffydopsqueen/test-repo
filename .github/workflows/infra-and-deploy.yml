@@ -109,22 +109,11 @@ jobs:
             --targets "Key=tag:Project,Values=${PROJECT}" "Key=tag:Environment,Values=${ENVIRONMENT}" "Key=tag:Role,Values=ansible-control" \
             --parameters commands="[
               \"set -eux\",
-              \"WORKDIR=/tmp/ansible-run-${GITHUB_SHA}\",
-              \"mkdir -p ${WORKDIR}\",
-              \"aws s3 cp s3://${ANSIBLE_SSM_BUCKET}/playbooks/${GITHUB_SHA}/ansible.tgz ${WORKDIR}/ansible.tgz\",
-              \"tar -xzf ${WORKDIR}/ansible.tgz -C ${WORKDIR}\",
-              \"export AWS_REGION=${AWS_REGION}\",
-              \"export PROJECT=${PROJECT}\",
-              \"export ENVIRONMENT=${ENVIRONMENT}\",
-              \"export WORDPRESS_IMAGE=${WORDPRESS_IMAGE}\",
-              \"export WORDPRESS_ECR_REGISTRY=${WORDPRESS_ECR_REGISTRY}\",
-              \"export DB_HOST=${DB_HOST}\",
-              \"export DB_NAME=${DB_NAME}\",
-              \"export DB_SECRET_ARN=${DB_SECRET_ARN}\",
-              \"export ANSIBLE_SSM_BUCKET=${ANSIBLE_SSM_BUCKET}\",
-              \"export ANSIBLE_CONFIG=${WORKDIR}/ansible/ansible.cfg\",
-              \"cd ${WORKDIR}\",
-              \"ansible-playbook ansible/wordpress.yml\"
+              \"mkdir -p /tmp/ansible-run-${GITHUB_SHA}\",
+              \"aws s3 cp s3://${ANSIBLE_SSM_BUCKET}/playbooks/${GITHUB_SHA}/ansible.tgz /tmp/ansible-run-${GITHUB_SHA}/ansible.tgz\",
+              \"tar -xzf /tmp/ansible-run-${GITHUB_SHA}/ansible.tgz -C /tmp/ansible-run-${GITHUB_SHA}\",
+              \"cd /tmp/ansible-run-${GITHUB_SHA}\",
+              \"export AWS_REGION=${AWS_REGION} PROJECT=${PROJECT} ENVIRONMENT=${ENVIRONMENT} WORDPRESS_IMAGE=${WORDPRESS_IMAGE} WORDPRESS_ECR_REGISTRY=${WORDPRESS_ECR_REGISTRY} DB_HOST=${DB_HOST} DB_NAME=${DB_NAME} DB_SECRET_ARN=${DB_SECRET_ARN} ANSIBLE_SSM_BUCKET=${ANSIBLE_SSM_BUCKET} ANSIBLE_CONFIG=/tmp/ansible-run-${GITHUB_SHA}/ansible/ansible.cfg; ansible-playbook ansible/wordpress.yml\"
             ]" \
             --comment "Run WordPress deploy via Ansible control node" \
             --query "Command.CommandId" \

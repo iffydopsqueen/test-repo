@@ -14,7 +14,8 @@ locals {
     "sudo apt-get install -y python3-boto3 python3-botocore || true",
     "curl -sSLo /tmp/session-manager-plugin.deb https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_64bit/session-manager-plugin.deb",
     "sudo dpkg -i /tmp/session-manager-plugin.deb || sudo DEBIAN_FRONTEND=noninteractive apt-get -f install -y",
-    "ansible-galaxy collection install amazon.aws",
+    "sudo mkdir -p /usr/share/ansible/collections",
+    "ansible-galaxy collection install amazon.aws -p /usr/share/ansible/collections",
   ]
 
   app_user_data = <<-EOF

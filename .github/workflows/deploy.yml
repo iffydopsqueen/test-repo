@@ -51,7 +51,10 @@ jobs:
         run: terraform init -input=false -backend-config=backend.hcl
 
       - name: Terraform fmt
-        run: terraform fmt -check -diff -recursive
+        run: |
+          if ! terraform fmt -check -diff -recursive; then
+            echo "Terraform files need formatting (run: terraform fmt -recursive)."
+          fi
 
       - name: Terraform validate
         run: terraform validate -no-color

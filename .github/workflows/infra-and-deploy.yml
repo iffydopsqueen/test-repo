@@ -27,6 +27,7 @@ env:
   # TF_VAR_attach_ecr_readonly: "true"
   GHA_OIDC_ROLE_NAME: ${{ vars.GHA_OIDC_ROLE_NAME }}
   TF_DIR: "terraform/infrastructure/${{ inputs.environment }}"
+  ANSIBLE_CONFIG: "ansible/ansible.cfg"
 
 jobs:
   build-and-deploy:
@@ -85,13 +86,12 @@ jobs:
           echo "WORDPRESS_IMAGE=${WORDPRESS_REPO}:${IMAGE_TAG}" >> $GITHUB_ENV
           echo "WORDPRESS_ECR_REGISTRY=$(echo ${WORDPRESS_REPO} | cut -d/ -f1)" >> $GITHUB_ENV
 
-      - name: Install Ansible
+      - name: Package Ansible artifacts
         run: |
-          python3 -m pip install --upgrade pip
-          pip3 install ansible boto3 botocore
-          ansible-galaxy collection install amazon.aws
+          tar -czf /tmp/ansible.tgz ansible
+          aws s3 cp /tmp/ansible.tgz s3://${ANSIBLE_SSM_BUCKET}/playbooks/${GITHUB_SHA}/ansible.tgz
 
-      - name: Run Ansible (WordPress)
+      - name: Run Ansible on control node (SSM)
         env:
           AWS_REGION: ${{ secrets.AWS_REGION }}
           PROJECT: ${{ env.PROJECT }}
@@ -102,4 +102,49 @@ jobs:
           DB_NAME: wordpress
           DB_SECRET_ARN: ${{ env.DB_SECRET_ARN }}
           ANSIBLE_SSM_BUCKET: ${{ env.ANSIBLE_SSM_BUCKET }}
-        run: ansible-playbook ansible/wordpress.yml
+        run: |
+          COMMAND_ID=$(aws ssm send-command \
+            --document-name "AWS-RunShellScript" \
+            --targets "Key=tag:Project,Values=${PROJECT}" "Key=tag:Environment,Values=${ENVIRONMENT}" "Key=tag:Role,Values=ansible-control" \
+            --parameters commands="[
+              \"set -eux\",
+              \"WORKDIR=/tmp/ansible-run-${GITHUB_SHA}\",
+              \"mkdir -p ${WORKDIR}\",
+              \"aws s3 cp s3://${ANSIBLE_SSM_BUCKET}/playbooks/${GITHUB_SHA}/ansible.tgz ${WORKDIR}/ansible.tgz\",
+              \"tar -xzf ${WORKDIR}/ansible.tgz -C ${WORKDIR}\",
+              \"export AWS_REGION=${AWS_REGION}\",
+              \"export PROJECT=${PROJECT}\",
+              \"export ENVIRONMENT=${ENVIRONMENT}\",
+              \"export WORDPRESS_IMAGE=${WORDPRESS_IMAGE}\",
+              \"export WORDPRESS_ECR_REGISTRY=${WORDPRESS_ECR_REGISTRY}\",
+              \"export DB_HOST=${DB_HOST}\",
+              \"export DB_NAME=${DB_NAME}\",
+              \"export DB_SECRET_ARN=${DB_SECRET_ARN}\",
+              \"export ANSIBLE_SSM_BUCKET=${ANSIBLE_SSM_BUCKET}\",
+              \"export ANSIBLE_CONFIG=${WORKDIR}/ansible/ansible.cfg\",
+              \"cd ${WORKDIR}\",
+              \"ansible-playbook ansible/wordpress.yml\"
+            ]" \
+            --comment "Run WordPress deploy via Ansible control node" \
+            --query "Command.CommandId" \
+            --output text)
+
+          for i in {1..60}; do
+            STATUS=$(aws ssm list-command-invocations \
+              --command-id "${COMMAND_ID}" \
+              --details \
+              --query "CommandInvocations[0].Status" \
+              --output text)
+
+            echo "SSM command status: ${STATUS}"
+            if [[ "${STATUS}" == "Success" ]]; then
+              exit 0
+            fi
+            if [[ "${STATUS}" == "Failed" || "${STATUS}" == "TimedOut" || "${STATUS}" == "Cancelled" ]]; then
+              exit 1
+            fi
+            sleep 10
+          done
+
+          echo "SSM command did not complete in time."
+          exit 1

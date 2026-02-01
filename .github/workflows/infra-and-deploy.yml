@@ -71,11 +71,9 @@ jobs:
 
           DB_HOST=$(jq -r '.rds_endpoint.value' /tmp/tf-outputs.json)
           DB_SECRET_ARN=$(jq -r '.secrets_manager_arn.value' /tmp/tf-outputs.json)
-          APP_INSTANCE_IDS=$(jq -r '.ec2_instance_ids.value[]' /tmp/tf-outputs.json | paste -sd' ' -)
           SSM_BUCKET=$(jq -r '.ansible_ssm_bucket_name.value' /tmp/tf-outputs.json)
           echo "DB_HOST=$DB_HOST" >> $GITHUB_ENV
           echo "DB_SECRET_ARN=$DB_SECRET_ARN" >> $GITHUB_ENV
-          echo "APP_INSTANCE_IDS=$APP_INSTANCE_IDS" >> $GITHUB_ENV
           echo "ANSIBLE_SSM_BUCKET=$SSM_BUCKET" >> $GITHUB_ENV
 
       - name: Login to ECR
@@ -104,7 +102,6 @@ jobs:
           DB_HOST: ${{ env.DB_HOST }}
           DB_NAME: wordpress
           DB_SECRET_ARN: ${{ env.DB_SECRET_ARN }}
-          APP_INSTANCE_IDS: ${{ env.APP_INSTANCE_IDS }}
           ANSIBLE_SSM_BUCKET: ${{ env.ANSIBLE_SSM_BUCKET }}
         run: |
           COMMAND_ID=$(aws ssm send-command \
@@ -118,11 +115,7 @@ jobs:
               \"tar -xzf /tmp/ansible-run-${GITHUB_SHA}/ansible.tgz -C /tmp/ansible-run-${GITHUB_SHA}\",
               \"cd /tmp/ansible-run-${GITHUB_SHA}\",
               \"export AWS_REGION=${AWS_REGION} PROJECT=${PROJECT} ENVIRONMENT=${ENVIRONMENT} WORDPRESS_IMAGE=${WORDPRESS_IMAGE} WORDPRESS_ECR_REGISTRY=${WORDPRESS_ECR_REGISTRY} DB_HOST=${DB_HOST} DB_NAME=${DB_NAME} DB_SECRET_ARN=${DB_SECRET_ARN} APP_INSTANCE_IDS=${APP_INSTANCE_IDS} ANSIBLE_SSM_BUCKET=${ANSIBLE_SSM_BUCKET} ANSIBLE_CONFIG=/tmp/ansible-run-${GITHUB_SHA}/ansible/ansible.cfg ANSIBLE_COLLECTIONS_PATH=/usr/share/ansible/collections:/root/.ansible/collections\",
-              \"cat > /tmp/ansible-run-${GITHUB_SHA}/inventory.ini <<'EOF'\",
-              \"[role_app]\",
-              \"EOF\",
-              \"for id in ${APP_INSTANCE_IDS}; do echo \\\"${id} ansible_connection=amazon.aws.aws_ssm ansible_aws_ssm_region=${AWS_REGION}\\\" >> /tmp/ansible-run-${GITHUB_SHA}/inventory.ini; done\",
-              \"ansible-playbook -i /tmp/ansible-run-${GITHUB_SHA}/inventory.ini ansible/wordpress.yml\"
+              \"ansible-playbook ansible/wordpress.yml\"
             ]" \
             --comment "Run WordPress deploy via Ansible control node" \
             --query "Command.CommandId" \

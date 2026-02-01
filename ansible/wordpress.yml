@@ -5,7 +5,7 @@
     wordpress_app_dir: /opt/wordpress
     wordpress_image: "{{ lookup('env', 'WORDPRESS_IMAGE') }}"
     wordpress_nginx_image: "{{ lookup('env', 'WORDPRESS_NGINX_IMAGE') | default('nginx:1.25-alpine', true) }}"
-    wordpress_host_port: "{{ lookup('env', 'WORDPRESS_HOST_PORT') | default('80') }}"
+    wordpress_host_port: "{{ lookup('env', 'WORDPRESS_HOST_PORT') | default('80', true) }}"
     wordpress_ecr_registry: "{{ lookup('env', 'WORDPRESS_ECR_REGISTRY') }}"
     db_host: "{{ lookup('env', 'DB_HOST') }}"
     db_name: "{{ lookup('env', 'DB_NAME') | default('wordpress') }}"

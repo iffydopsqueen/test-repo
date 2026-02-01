@@ -3,6 +3,8 @@ services:
   wordpress:
     image: "{{ wordpress_image }}"
     restart: unless-stopped
+    expose:
+      - "9000"
     environment:
       WORDPRESS_DB_HOST: "{{ db_host }}"
       WORDPRESS_DB_USER: "{{ db_secret.username | replace('$', '$$') }}"

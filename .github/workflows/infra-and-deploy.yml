@@ -118,6 +118,7 @@ jobs:
               \"export PATH=/opt/ansible-venv/bin:$PATH\",
               \"if [ -x /opt/ansible-venv/bin/pip ]; then /opt/ansible-venv/bin/pip install --upgrade boto3 botocore; else python3 -m pip install --upgrade boto3 botocore; fi\",
               \"ansible-galaxy collection list amazon.aws >/dev/null 2>&1 || ansible-galaxy collection install amazon.aws -p /usr/share/ansible/collections\",
+              \"ansible-inventory -i ansible/inventory/ec2.yml --list -vvv\",
               \"ansible-playbook ansible/wordpress.yml\"
             ]" \
             --comment "Run WordPress deploy via Ansible control node" \

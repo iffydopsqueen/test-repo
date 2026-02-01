@@ -31,7 +31,7 @@ module "vpc" {
 module "secrets" {
   source = "../../modules/asm"
 
-  name     = "${local.name_prefix}-db-creds-v1"
+  name     = "${local.name_prefix}-db-creds-v2"
   username = var.db_username
   password = random_password.db.result
 

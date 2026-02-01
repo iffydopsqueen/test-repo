@@ -24,8 +24,11 @@ hs_err_pid*
 replay_pid*
 
 # Terraform
-.terraform/
 *.tfstate
 *.tfstate.*
-crash.log
-crash.*.log
+# *.tfvars
+# *.tfvars.json
+.terraform/
+.terraform.lock.hcl
+.terraformrc
+terraform.rc

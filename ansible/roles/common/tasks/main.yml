@@ -2,6 +2,9 @@
   ansible.builtin.apt:
     update_cache: true
     cache_valid_time: 3600
+    lock_timeout: 300
+    update_cache_retries: 5
+    update_cache_retry_max_delay: 10
 
 - name: Install common packages
   ansible.builtin.apt:
@@ -13,3 +16,4 @@
       - awscli
       - mysql-client
     state: present
+    lock_timeout: 300

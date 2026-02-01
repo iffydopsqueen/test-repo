@@ -1,2 +1,4 @@
 ansible_connection: amazon.aws.aws_ssm
 ansible_aws_ssm_region: "{{ aws_region }}"
+ansible_aws_ssm_timeout: 1200
+ansible_command_timeout: 1200

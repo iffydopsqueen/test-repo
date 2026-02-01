@@ -65,6 +65,14 @@ locals {
         cidr_blocks       = ["0.0.0.0/0"]
         security_group_id = module.ec2.app_sg_id
       }
+      app_egress_http = {
+        type              = "egress"
+        from_port         = 80
+        to_port           = 80
+        protocol          = "tcp"
+        cidr_blocks       = ["0.0.0.0/0"]
+        security_group_id = module.ec2.app_sg_id
+      }
       db_ingress_from_app = {
         type                     = "ingress"
         from_port                = var.db_port

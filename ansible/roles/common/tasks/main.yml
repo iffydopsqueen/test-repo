@@ -6,6 +6,25 @@
     update_cache_retries: 5
     update_cache_retry_max_delay: 10
 
+- name: Ensure software-properties-common is installed (Ubuntu)
+  ansible.builtin.apt:
+    name: software-properties-common
+    state: present
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+- name: Enable universe repository (Ubuntu)
+  ansible.builtin.command: add-apt-repository -y universe
+  register: enable_universe
+  changed_when: enable_universe.rc == 0
+  when: ansible_facts['distribution'] == 'Ubuntu'
+
+- name: Update apt cache after enabling universe (Ubuntu)
+  ansible.builtin.apt:
+    update_cache: true
+  when:
+    - ansible_facts['distribution'] == 'Ubuntu'
+    - enable_universe is changed
+
 - name: Install common packages
   ansible.builtin.apt:
     name:
@@ -17,3 +36,40 @@
       - mysql-client
     state: present
     lock_timeout: 300
+
+# - name: Check for AWS CLI
+#   ansible.builtin.shell: command -v aws
+#   register: awscli_check
+#   changed_when: false
+#   failed_when: false
+
+# - name: Install AWS CLI v2 (official installer)
+#   when: awscli_check.rc != 0
+#   block:
+#     - name: Download AWS CLI v2 bundle
+#       ansible.builtin.get_url:
+#         url: https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
+#         dest: /tmp/awscliv2.zip
+#         mode: "0644"
+
+#     - name: Unzip AWS CLI v2 bundle
+#       ansible.builtin.unarchive:
+#         src: /tmp/awscliv2.zip
+#         dest: /tmp
+#         remote_src: true
+
+#     - name: Install AWS CLI v2
+#       ansible.builtin.command: /tmp/aws/install -i /usr/local/aws-cli -b /usr/local/bin
+#       args:
+#         creates: /usr/local/bin/aws
+#   rescue:
+#     - name: Install snapd (Ubuntu)
+#       ansible.builtin.apt:
+#         name: snapd
+#         state: present
+#       when: ansible_facts['distribution'] == 'Ubuntu'
+
+#     - name: Install AWS CLI via snap
+#       ansible.builtin.command: snap install aws-cli --classic
+#       args:
+#         creates: /snap/bin/aws

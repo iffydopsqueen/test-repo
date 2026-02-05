@@ -81,7 +81,7 @@ jobs:
 
       - name: Build and push WordPress image
         run: |
-          IMAGE_TAG=${GITHUB_SHA}
+          IMAGE_TAG=v${GITHUB_RUN_NUMBER}
           docker build -t ${WORDPRESS_REPO}:${IMAGE_TAG} -f app/Dockerfile app
           docker push ${WORDPRESS_REPO}:${IMAGE_TAG}
           echo "WORDPRESS_IMAGE=${WORDPRESS_REPO}:${IMAGE_TAG}" >> $GITHUB_ENV

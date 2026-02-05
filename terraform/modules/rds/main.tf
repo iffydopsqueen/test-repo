@@ -46,4 +46,6 @@ resource "aws_db_instance" "this" {
   tags = merge(var.tags, {
     Name = "${var.name}-db"
   })
+
+  depends_on = [aws_db_subnet_group.this]
 }

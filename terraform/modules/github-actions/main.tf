@@ -77,6 +77,8 @@ resource "aws_ssm_document" "ansible_run" {
 
 # Least-privilege policy for GitHub Actions (scoped by tags).
 data "aws_iam_policy_document" "permissions" {
+
+  # Baseline read-only discovery across services used by Terraform
   statement {
     sid     = "ReadOnlyForDiscovery"
     effect  = "Allow"
@@ -101,6 +103,7 @@ data "aws_iam_policy_document" "permissions" {
     resources = ["*"]
   }
 
+  # ECR auth token is account-wide and cannot be scoped to a repo ARN.
   statement {
     sid     = "EcrAuthToken"
     effect  = "Allow"
@@ -108,6 +111,7 @@ data "aws_iam_policy_document" "permissions" {
     resources = ["*"]
   }
 
+  # CI needs to upload artifacts to S3 (SSM bundle, etc).
   statement {
     sid     = "S3FullAccessAllBuckets"
     effect  = "Allow"
@@ -115,6 +119,7 @@ data "aws_iam_policy_document" "permissions" {
     resources = ["*"]
   }
 
+  # SendCommand requires explicit permission on the SSM document ARN.
   statement {
     sid     = "SsmSendCommandDocument"
     effect  = "Allow"
@@ -122,6 +127,7 @@ data "aws_iam_policy_document" "permissions" {
     resources = [aws_ssm_document.ansible_run.arn]
   }
 
+  # SendCommand against instances is scoped by tags.
   statement {
     sid     = "SsmSendCommandTaggedInstances"
     effect  = "Allow"
@@ -144,6 +150,7 @@ data "aws_iam_policy_document" "permissions" {
     }
   }
 
+  # Create/modify/delete for resources that support request tagging at creation time.
   statement {
     sid     = "TaggableResourceCreation"
     effect  = "Allow"
@@ -221,6 +228,7 @@ data "aws_iam_policy_document" "permissions" {
     }
   }
 
+  # Manage resources after creation, but only when resource tags match.
   statement {
     sid     = "ManageTaggedResources"
     effect  = "Allow"
@@ -248,6 +256,20 @@ data "aws_iam_policy_document" "permissions" {
     }
   }
 
+  # Listener/Rule APIs don't reliably support tag conditions, so allow explicitly.
+  statement {
+    sid     = "ManageElbListeners"
+    effect  = "Allow"
+    actions = [
+      "elasticloadbalancing:DeleteListener",
+      "elasticloadbalancing:DeleteRule",
+      "elasticloadbalancing:ModifyListener",
+      "elasticloadbalancing:ModifyRule"
+    ]
+    resources = ["*"]
+  }
+
+  # Cleanup for IAM resources that have Project/Environment tags.
   statement {
     sid     = "ManageTaggedIamResources"
     effect  = "Allow"
@@ -278,6 +300,7 @@ data "aws_iam_policy_document" "permissions" {
     }
   }
 
+  # Limit PassRole to AWS services that this stack provisions.
   statement {
     sid     = "PassRoleToServices"
     effect  = "Allow"
@@ -324,7 +347,8 @@ data "aws_iam_policy_document" "permissions" {
       "ec2:AllocateAddress",
       "ec2:ReleaseAddress",
       "ec2:AssociateAddress",
-      "ec2:DisassociateAddress"
+      "ec2:DisassociateAddress",
+      "ec2:DetachNetworkInterface"
     ]
     resources = ["*"]
   }

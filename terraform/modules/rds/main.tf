@@ -48,4 +48,8 @@ resource "aws_db_instance" "this" {
   })
 
   depends_on = [aws_db_subnet_group.this]
+
+  timeouts {
+    delete = "10m"
+  }
 }

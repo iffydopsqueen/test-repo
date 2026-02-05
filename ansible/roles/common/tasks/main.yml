@@ -61,14 +61,3 @@
       ansible.builtin.command: /tmp/aws/install -i /usr/local/aws-cli -b /usr/local/bin
       args:
         creates: /usr/local/bin/aws
-  rescue:
-    - name: Install snapd (Ubuntu)
-      ansible.builtin.apt:
-        name: snapd
-        state: present
-      when: ansible_facts['distribution'] == 'Ubuntu'
-
-    - name: Install AWS CLI via snap
-      ansible.builtin.command: snap install aws-cli --classic
-      args:
-        creates: /snap/bin/aws

@@ -18,8 +18,8 @@ locals {
     "sudo ln -sf /opt/ansible-venv/bin/ansible-inventory /usr/local/bin/ansible-inventory",
     "sudo mkdir -p /usr/share/ansible/collections",
     "sudo /opt/ansible-venv/bin/ansible-galaxy collection install amazon.aws -p /usr/share/ansible/collections",
-    "curl -sSLo /tmp/session-manager-plugin.deb https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_64bit/session-manager-plugin.deb",
-    "sudo dpkg -i /tmp/session-manager-plugin.deb || sudo DEBIAN_FRONTEND=noninteractive apt-get -f install -y",
+    "if ! command -v session-manager-plugin >/dev/null 2>&1; then curl -sSLo /tmp/session-manager-plugin.deb https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_64bit/session-manager-plugin.deb && sudo dpkg -i /tmp/session-manager-plugin.deb || sudo DEBIAN_FRONTEND=noninteractive apt-get -f install -y; fi",
+    "if [ -x /usr/local/sessionmanagerplugin/bin/session-manager-plugin ] && [ ! -x /usr/local/bin/session-manager-plugin ]; then sudo ln -s /usr/local/sessionmanagerplugin/bin/session-manager-plugin /usr/local/bin/session-manager-plugin; fi",
   ]
 
   app_user_data = <<-EOF

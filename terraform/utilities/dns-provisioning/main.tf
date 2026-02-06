@@ -17,7 +17,7 @@ data "terraform_remote_state" "infra" {
 }
 
 module "dns" {
-  source = "../modules/dns"
+  source = "../../modules/dns"
 
   zone_name    = var.route53_zone_name
   record_name  = var.route53_record_name

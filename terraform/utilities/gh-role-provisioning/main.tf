@@ -14,7 +14,7 @@ locals {
 ####################################################################
 
 module "github_actions" {
-  source = "../modules/gha"
+  source = "../../modules/gha"
 
   name_prefix                 = local.name_prefix
   project                     = var.project

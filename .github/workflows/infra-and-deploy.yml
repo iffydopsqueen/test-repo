@@ -128,6 +128,7 @@ jobs:
               \"cd /tmp/ansible-run-${GITHUB_SHA}\",
               \"export AWS_REGION=${AWS_REGION} PROJECT=${PROJECT} ENVIRONMENT=${ENVIRONMENT} WORDPRESS_IMAGE=${WORDPRESS_IMAGE} WORDPRESS_ECR_REGISTRY=${WORDPRESS_ECR_REGISTRY} DB_HOST=${DB_HOST} DB_NAME=${DB_NAME} DB_SECRET_ARN=${DB_SECRET_ARN} ANSIBLE_SSM_BUCKET=${ANSIBLE_SSM_BUCKET} ANSIBLE_CONFIG=/tmp/ansible-run-${GITHUB_SHA}/ansible/ansible.cfg ANSIBLE_COLLECTIONS_PATHS=/usr/share/ansible/collections:/root/.ansible/collections\",
               \"export PATH=/opt/ansible-venv/bin:$PATH\",
+              \"if ! command -v session-manager-plugin >/dev/null 2>&1; then ARCH=$(uname -m); if [ \\\"${ARCH}\\\" = \\\"x86_64\\\" ]; then PKG_ARCH=64bit; elif [ \\\"${ARCH}\\\" = \\\"aarch64\\\" ] || [ \\\"${ARCH}\\\" = \\\"arm64\\\" ]; then PKG_ARCH=arm64; else PKG_ARCH=64bit; fi; sudo apt-get update -y; curl -sSLo /tmp/session-manager-plugin.deb https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_${PKG_ARCH}/session-manager-plugin.deb && sudo dpkg -i /tmp/session-manager-plugin.deb || sudo DEBIAN_FRONTEND=noninteractive apt-get -f install -y; fi\",
               \"if [ -x /opt/ansible-venv/bin/pip ]; then /opt/ansible-venv/bin/pip install --upgrade boto3 botocore; else python3 -m pip install --upgrade boto3 botocore; fi\",
               \"ansible-galaxy collection list amazon.aws >/dev/null 2>&1 || ansible-galaxy collection install amazon.aws -p /usr/share/ansible/collections\",
               \"ansible-inventory --list -vvv\",

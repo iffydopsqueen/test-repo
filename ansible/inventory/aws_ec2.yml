@@ -10,6 +10,7 @@ hostnames:
 compose:
   ansible_host: instance_id
 keyed_groups:
-  - key: tags.Role
+  - key: aws_tags.Role
     prefix: role
 strict: false
+hostvars_prefix: aws_

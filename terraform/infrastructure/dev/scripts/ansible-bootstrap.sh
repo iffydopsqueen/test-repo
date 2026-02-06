@@ -24,15 +24,8 @@ if ! command -v session-manager-plugin >/dev/null 2>&1; then
   else
     PKG_ARCH=64bit
   fi
-  if command -v apt-get >/dev/null 2>&1; then
-    PKG_URL=https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_${PKG_ARCH}/session-manager-plugin.deb
-    curl -sSLo /tmp/session-manager-plugin.deb ${PKG_URL} && sudo dpkg -i /tmp/session-manager-plugin.deb || sudo DEBIAN_FRONTEND=noninteractive apt-get -f install -y
-  elif command -v yum >/dev/null 2>&1 || command -v dnf >/dev/null 2>&1; then
-    PKG_URL=https://s3.amazonaws.com/session-manager-downloads/plugin/latest/linux_${PKG_ARCH}/session-manager-plugin.rpm
-    curl -sSLo /tmp/session-manager-plugin.rpm ${PKG_URL} && (sudo yum install -y /tmp/session-manager-plugin.rpm || sudo dnf install -y /tmp/session-manager-plugin.rpm)
-  else
-    echo "No supported package manager found for session-manager-plugin"
-  fi
+  PKG_URL=https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_${PKG_ARCH}/session-manager-plugin.deb
+  curl -sSLo /tmp/session-manager-plugin.deb ${PKG_URL} && sudo dpkg -i /tmp/session-manager-plugin.deb || sudo DEBIAN_FRONTEND=noninteractive apt-get -f install -y
 fi
 if [ -x /usr/local/sessionmanagerplugin/bin/session-manager-plugin ] && [ ! -x /usr/local/bin/session-manager-plugin ]; then
   sudo ln -s /usr/local/sessionmanagerplugin/bin/session-manager-plugin /usr/local/bin/session-manager-plugin

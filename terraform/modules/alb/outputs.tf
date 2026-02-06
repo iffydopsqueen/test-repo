@@ -8,6 +8,11 @@ output "alb_dns_name" {
   description = "DNS name of the Application Load Balancer"
 }
 
+output "alb_zone_id" {
+  value       = aws_lb.this.zone_id
+  description = "Route53 hosted zone ID for the ALB"
+}
+
 output "alb_sg_id" {
   value       = aws_security_group.alb.id
   description = "Security group ID attached to the ALB"

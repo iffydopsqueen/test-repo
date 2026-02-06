@@ -1,6 +1,11 @@
 output "alb_dns_name" {
   value       = module.alb.alb_dns_name
-  description = "ALB DNS name (use as the CNAME target in Namecheap)"
+  description = "ALB DNS name (use as a DNS alias/CNAME target)"
+}
+
+output "alb_zone_id" {
+  value       = module.alb.alb_zone_id
+  description = "Route53 zone ID for the ALB (used for alias records)"
 }
 
 output "rds_endpoint" {

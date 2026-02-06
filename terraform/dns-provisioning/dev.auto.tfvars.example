@@ -1,0 +1,7 @@
+region              = "us-east-1"
+project             = "wordpress"
+environment         = "dev"
+route53_zone_name   = "example.com"
+route53_record_name = "@"
+infra_state_key     = "dev/terraform.tfstate"
+create_zone         = false

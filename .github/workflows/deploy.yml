@@ -52,9 +52,7 @@ jobs:
 
       - name: Terraform fmt
         run: |
-          if ! terraform fmt -check -diff -recursive; then
-            echo "Terraform files need formatting (run: terraform fmt -recursive)."
-          fi
+          terraform fmt -list=true -write=true -recursive
 
       - name: Terraform validate
         run: terraform validate -no-color
